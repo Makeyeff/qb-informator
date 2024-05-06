@@ -57,12 +57,13 @@ local function createBoxZone()
         return
     end
 
-    entityZone = EntityZone:Create(entPed, {
-        name = "informator" .. entPed,
-        debugPoly = false,
+    local coords = GetEntityCoords(entPed)
+    entityZone = BoxZone:Create(coords, 0.5, 1.5, {
+        name = "box_zone",
         offset = {1, 0.0, 0.0, 0.0, 0.0, 0.0},
-        scale = {1.0, 1.0, 1.0},
-        useZ = true
+        debugPoly = true,
+        minz = coords.z,
+        maxZ = coords.z + 1
     })
     if (entityZone) then
         entityZone:onPlayerInOut(function(isPointInside, point, zone)
