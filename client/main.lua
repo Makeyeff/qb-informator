@@ -5,7 +5,7 @@ local entityZone
 local entPed
 
 local function deletePedInformator()
-    if blip and entityZone and entPed then
+    if not blip and not entityZone and not entPed then
         return
     end
 
@@ -13,7 +13,10 @@ local function deletePedInformator()
         if blip then
             RemoveBlip(blip)
             blip = nil
-            entPed = nil
+        end
+        entPed = nil
+        if entityZone then
+            entityZone:destroy()
             entityZone = nil
         end
     end)
@@ -28,7 +31,7 @@ local function createBlip()
 
     local PlayerData = QBCore.Functions.GetPlayerData()
 
-    if 'leo' == PlayerData.job.type then
+    if PlayerData and PlayerData.job and 'leo' == PlayerData.job.type then
         -- if cops
         return
     end
@@ -81,8 +84,15 @@ local function createPedInformator()
             SetEntityInvincible(entPed, true)
             SetBlockingOfNonTemporaryEvents(entPed, true)
             FreezeEntityPosition(entPed, true)
+            Wait(1000)
+
+        end
+        if not blip then
             createBlip()
+        end
+        if not entityZone then
             createBoxZone()
+
         end
     end)
 end
@@ -91,6 +101,10 @@ CreateThread(function()
     local PlayerData = QBCore.Functions.GetPlayerData()
 
     while not PlayerData do
+        PlayerData = QBCore.Functions.GetPlayerData()
+        Wait(1000)
+    end
+    while not PlayerData.job do
         PlayerData = QBCore.Functions.GetPlayerData()
         Wait(1000)
     end
