@@ -5,6 +5,10 @@ local entityZone
 local entPed
 
 local function deletePedInformator()
+    if blip and entityZone and entPed then
+        return
+    end
+
     QBCore.Functions.TriggerCallback("qb-informator:server:deletePedInformator", function()
         if blip then
             RemoveBlip(blip)
@@ -13,6 +17,7 @@ local function deletePedInformator()
             entityZone = nil
         end
     end)
+    Wait(1000)
 end
 
 local function createBlip()
@@ -37,23 +42,39 @@ local function createBlip()
     BeginTextCommandSetBlipName("STRING")
     AddTextComponentSubstringPlayerName(Lang:t("informator.blip"))
     EndTextCommandSetBlipName(blip)
+    Wait(1000)
+end
+
+local function pointInsideMenu()
+    QBCore.Functions.Notify(Lang:t('informator.inZone'), 'success')
+end
+
+local function createBoxZone()
+    if entityZone then
+        return
+    end
 
     entityZone = EntityZone:Create(entPed, {
-        name = "entityZone",
-        debugPoly = false
+        name = "informator" .. entPed,
+        debugPoly = false,
+        offset = {1, 0.0, 0.0, 0.0, 0.0, 0.0},
+        scale = {1.0, 1.0, 1.0},
+        useZ = true
     })
     if (entityZone) then
         entityZone:onPlayerInOut(function(isPointInside, point, zone)
-            print("combo: isPointInside is", isPointInside, " for point", point)
             if isPointInside then
-                QBCore.Functions.Notify(Lang:t('informator.inZone'), 'success')
+                pointInsideMenu()
             end
         end)
     end
-
+    Wait(1000)
 end
 
 local function createPedInformator()
+    if entPed then
+        return
+    end
     QBCore.Functions.TriggerCallback("qb-informator:server:createPedInformator", function(netId, isCreate)
         if not entPed then
             entPed = NetToEnt(netId)
@@ -61,23 +82,36 @@ local function createPedInformator()
             SetBlockingOfNonTemporaryEvents(entPed, true)
             FreezeEntityPosition(entPed, true)
             createBlip()
+            createBoxZone()
         end
     end)
 end
 
 CreateThread(function()
+    local PlayerData = QBCore.Functions.GetPlayerData()
+
+    while not PlayerData do
+        PlayerData = QBCore.Functions.GetPlayerData()
+        Wait(1000)
+    end
+
+    Wait(5000)
+
     while (not HasModelLoaded(GetHashKey(Config.model))) do
         RequestModel(GetHashKey(Config.model))
         Wait(100)
     end
 
+    local deletePedTime = Config.deletePedTime
+    local createPedTime = Config.createPedTime
+
     while true do
         local hours = GetClockHours()
-        if hours >= Config.deletePedTime and hours < Config.createPedTime then
+        if hours >= deletePedTime and hours < createPedTime then
             deletePedInformator()
         else
             createPedInformator()
         end
-        Wait(1000)
+        Wait(Config.update)
     end
 end)
