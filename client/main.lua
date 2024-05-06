@@ -59,7 +59,7 @@ local function createBoxZone()
 
     local coords = GetEntityCoords(entPed)
     entityZone = BoxZone:Create(coords, 0.5, 1.5, {
-        name = "box_zone",
+        name = "informator" .. entPed,
         offset = {1, 0.0, 0.0, 0.0, 0.0, 0.0},
         debugPoly = true,
         minz = coords.z,
